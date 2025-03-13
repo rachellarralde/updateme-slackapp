@@ -1,29 +1,24 @@
 # UpdateMe Slack App
 
-A Slack app that provides concise summaries of channel conversations using Groq AI.
-
 ## Features
-
-- Get summaries of channel conversations for any time period
-- Direct message interface for private updates
-- Support for both channel and DM history
-- Powered by Groq's AI for accurate and fast summaries
+- Channel summaries using AI
+- Flexible time ranges
+- Private DM interface
+- Secure data handling
 
 ## Installation
+1. Click "Add to Slack"
+2. Authorize required permissions
+3. Invite @UpdateMe to channels you want to monitor
 
-### Prerequisites
+## Usage
+### Channel Summaries
+```/updateme 7``` - Get 7-day summary
 
-- Node.js
-- npm or yarn
-- Slack account
-- Groq account
-- Slack app created in the Slack API Dashboard
+### Private Updates
+DM @UpdateMe with: ```7 #channel-name```
 
-### Local Development
-
-1. Clone the repository
-
-```bash
-git clone <your-repo-url>
-cd up-to-speed
-```
+## Security
+- No message storage
+- Encrypted communications
+- GDPR compliant
