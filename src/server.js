@@ -16,7 +16,8 @@ async function startServer() {
     const app = new App({
       token: process.env.SLACK_BOT_TOKEN,
       signingSecret: process.env.SLACK_SIGNING_SECRET,
-      // Configure for production HTTP mode
+      socketMode: true,
+      appToken: process.env.SLACK_APP_TOKEN,
       endpoints: '/slack/events',
       processBeforeResponse: true
     });
