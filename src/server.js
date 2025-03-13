@@ -16,9 +16,23 @@ async function startServer() {
     const app = new App({
       token: process.env.SLACK_BOT_TOKEN,
       signingSecret: process.env.SLACK_SIGNING_SECRET,
-      // Remove socket mode for production
-      appToken: process.env.SLACK_APP_TOKEN,
+      // Configure for production HTTP mode
+      receiver: {
+        pathPrefix: '/slack'
+      },
       port: process.env.PORT || 3000
+    });
+
+    // Add command handler
+    app.command('/updateme', async ({ command, ack, respond }) => {
+      try {
+        await ack();
+        const [days = "7", targetChannel = ""] = command.text.split(" ");
+        await processUpdateRequest(app.client, command.channel_id, days, targetChannel.replace(/[<#>]/g, ""));
+      } catch (error) {
+        console.error('Command error:', error);
+        await respond('Sorry, there was an error processing your request.');
+      }
     });
 
     // Message handler for direct messages
