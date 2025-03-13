@@ -17,21 +17,17 @@ async function startServer() {
       token: process.env.SLACK_BOT_TOKEN,
       signingSecret: process.env.SLACK_SIGNING_SECRET,
       // Configure for production HTTP mode
-      customRoutes: [{
-        path: '/slack/events',
-        method: ['POST'],
-        handler: (req, res) => {
-          // Handle URL verification
-          if (req.body.type === 'url_verification') {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ challenge: req.body.challenge }));
-            return;
-          }
-          res.writeHead(200);
-          res.end();
-        }
-      }],
-      port: process.env.PORT || 3000
+      endpoints: '/slack/events',
+      processBeforeResponse: true
+    });
+
+    // Add URL verification handler
+    app.receiver.router.post('/slack/events', (req, res) => {
+      if (req.body.type === 'url_verification') {
+        res.send({ challenge: req.body.challenge });
+        return;
+      }
+      res.send();
     });
 
     // Add command handler
