@@ -16,19 +16,20 @@ async function startServer() {
     const app = new App({
       token: process.env.SLACK_BOT_TOKEN,
       signingSecret: process.env.SLACK_SIGNING_SECRET,
-      socketMode: true,
-      appToken: process.env.SLACK_APP_TOKEN,
-      endpoints: '/slack/events',
-      processBeforeResponse: true
+      // Configure for production HTTP mode
+      receiver: {
+        pathPrefix: '/slack'
+      },
+      port: process.env.PORT || 3000
     });
 
     // Add URL verification handler
     app.receiver.router.post('/slack/events', (req, res) => {
-      if (req.body.type === 'url_verification') {
-        res.send({ challenge: req.body.challenge });
+      if (req.body && req.body.type === 'url_verification') {
+        res.json({ challenge: req.body.challenge });
         return;
       }
-      res.send();
+      res.sendStatus(200);
     });
 
     // Add command handler
@@ -36,7 +37,9 @@ async function startServer() {
       try {
         await ack();
         const [days = "7", targetChannel = ""] = command.text.split(" ");
-        await processUpdateRequest(app.client, command.channel_id, days, targetChannel.replace(/[<#>]/g, ""));
+        // Clean up channel ID format
+        const channelId = targetChannel ? targetChannel.replace(/[<>#]/g, "") : command.channel_id;
+        await processUpdateRequest(app.client, command.channel_id, days, channelId);
       } catch (error) {
         console.error('Command error:', error);
         await respond('Sorry, there was an error processing your request.');
