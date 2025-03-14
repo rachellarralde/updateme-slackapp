@@ -14,18 +14,29 @@ async function startServer() {
     await setupDatabase();
 
     const express = require('express');
-        const app = new App({
-          token: process.env.SLACK_BOT_TOKEN,
-          signingSecret: process.env.SLACK_SIGNING_SECRET,
-          receiver: express().use(express.json()).post('/slack/events', (req, res) => {
-            if (req.body.type === 'url_verification') {
-              console.log('Challenge received:', req.body.challenge);
-              return res.send(req.body.challenge);
-            }
-            res.sendStatus(200);
-          }),
-          port: process.env.PORT || 3000
+        const bodyParser = require('body-parser');
+        const server = express();
+        
+        // Parse JSON bodies before any routing
+        server.use(bodyParser.json());
+        
+        // Handle the challenge immediately
+        server.post('/slack/events', (req, res) => {
+          console.log('Received body:', req.body);
+          
+          if (req.body && req.body.type === 'url_verification') {
+            console.log('Responding to challenge:', req.body.challenge);
+            return res.status(200).send(req.body.challenge);
+          }
+          
+          res.sendStatus(200);
         });
+    const app = new App({
+      token: process.env.SLACK_BOT_TOKEN,
+      signingSecret: process.env.SLACK_SIGNING_SECRET,
+      receiver: server,
+      port: process.env.PORT || 3000
+    });
 
     // Remove the previous router.post handler since we're using customRoutes
     
