@@ -21,13 +21,15 @@ async function startServer() {
         path: '/slack/events',
         method: ['POST'],
         handler: (req, res) => {
-          console.log('Received request:', req.body); // Debug logging
-          if (req.body && req.body.type === 'url_verification') {
-            console.log('Challenge received:', req.body.challenge); // Debug logging
-            res.setHeader('Content-Type', 'application/json');
-            res.status(200).json({ challenge: req.body.challenge });
+          console.log('Received request type:', req.body?.type); // Debug logging
+          
+          if (req.body?.type === 'url_verification') {
+            // Respond with plain text challenge
+            res.setHeader('Content-Type', 'text/plain');
+            res.status(200).send(req.body.challenge);
             return;
           }
+          
           res.sendStatus(200);
         }
       }],
