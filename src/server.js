@@ -1,7 +1,9 @@
 require('dotenv').config();
 const { App } = require('@slack/bolt');
 const { OpenAI } = require('openai');
-const { setupDatabase } = require('./config/database');
+// Remove database dependency
+const express = require('express');
+const bodyParser = require('body-parser');
 
 const groq = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
@@ -10,13 +12,10 @@ const groq = new OpenAI({
 
 async function startServer() {
   try {
-    // Initialize database
-    // await setupDatabase(); // Comment this out temporarily
-
-    const express = require('express');
-    const bodyParser = require('body-parser');
+    // Remove database initialization
     const server = express();
-        
+    server.use(bodyParser.json());
+    
         // Parse JSON bodies before any routing
         server.use(bodyParser.json());
         
