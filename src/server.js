@@ -11,11 +11,11 @@ const groq = new OpenAI({
 async function startServer() {
   try {
     // Initialize database
-    await setupDatabase();
+    // await setupDatabase(); // Comment this out temporarily
 
     const express = require('express');
-        const bodyParser = require('body-parser');
-        const server = express();
+    const bodyParser = require('body-parser');
+    const server = express();
         
         // Parse JSON bodies before any routing
         server.use(bodyParser.json());
