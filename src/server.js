@@ -17,21 +17,24 @@ async function startServer() {
       token: process.env.SLACK_BOT_TOKEN,
       signingSecret: process.env.SLACK_SIGNING_SECRET,
       // Configure for production HTTP mode
-      receiver: {
-        pathPrefix: '/slack'
-      },
+      customRoutes: [{
+        path: '/slack/events',
+        method: ['POST'],
+        handler: (req, res) => {
+          // Handle URL verification challenge
+          if (req.body.type === 'url_verification') {
+            return res.send({
+              challenge: req.body.challenge
+            });
+          }
+          res.send();
+        }
+      }],
       port: process.env.PORT || 3000
     });
 
-    // Add URL verification handler
-    app.receiver.router.post('/slack/events', (req, res) => {
-      if (req.body && req.body.type === 'url_verification') {
-        res.json({ challenge: req.body.challenge });
-        return;
-      }
-      res.sendStatus(200);
-    });
-
+    // Remove the previous router.post handler since we're using customRoutes
+    
     // Add command handler
     app.command('/updateme', async ({ command, ack, respond }) => {
       try {
