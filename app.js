@@ -39,34 +39,48 @@ app.command("/updateme", async ({ command, ack, client }) => {
     await ack();
     console.log("Command acknowledged");
 
-    // Try to join the channel if we're not already in it
-    try {
-      await client.conversations.join({
-        channel: command.channel_id,
-      });
-      console.log("Joined channel successfully");
-    } catch (joinError) {
-      console.log("Join channel error (might be a DM):", joinError.message);
+    // Parse the number of days and channel
+    const [daysStr, channelStr] = command.text.split(" ");
+    const days = parseInt(daysStr) || 7;
+    
+    // Handle channel parsing and access
+    let channelId = command.channel_id;
+    let channelName = "this channel";
+    
+    if (channelStr) {
+      // Handle both #channel-name and <#CHANNEL_ID> formats
+      const matches = channelStr.match(/^<#([A-Z0-9]+)\|?([^>]+)?>/);
+      if (matches) {
+        channelId = matches[1];
+        channelName = matches[2] || channelStr;
+      }
+
+      // Try to join the channel first
+      try {
+        await client.conversations.join({
+          channel: channelId
+        });
+        console.log(`Successfully joined channel: ${channelName}`);
+      } catch (joinError) {
+        console.error('Join error:', joinError);
+        // Continue anyway as we might already be in the channel
+      }
     }
 
-    // Parse the number of days
-    const days = parseInt(command.text) || 7;
-    const oldest = Math.floor(Date.now() / 1000) - days * 24 * 60 * 60;
-
     await client.chat.postMessage({
-      channel: responseChannel,
-      text: `Fetching updates from ${targetChannel || "this channel"} for the last ${days} days...`
+      channel: command.channel_id,
+      text: `Fetching updates from ${channelName} for the last ${days} days...`
     });
 
     const result = await client.conversations.history({
-      channel: channelId || command.channel_id,
+      channel: channelId,
       oldest: Math.floor(Date.now() / 1000) - parseInt(days) * 24 * 60 * 60,
       limit: 100
     });
 
     if (!result.messages?.length) {
       await client.chat.postMessage({
-        channel: responseChannel,
+        channel: command.channel_id,  // Fixed: using command.channel_id instead of responseChannel
         text: "No messages found in the specified time period."
       });
       return;
@@ -89,8 +103,8 @@ app.command("/updateme", async ({ command, ack, client }) => {
     });
 
     await client.chat.postMessage({
-      channel: responseChannel,
-      text: `Updates from ${targetChannel || "this channel"}:\n${completion.choices[0].message.content}`
+      channel: command.channel_id,  // Fixed: using command.channel_id instead of responseChannel
+      text: `Updates from ${channelStr || "this channel"}:\n${completion.choices[0].message.content}`  // Fixed: using channelStr
     });
 
   } catch (error) {
